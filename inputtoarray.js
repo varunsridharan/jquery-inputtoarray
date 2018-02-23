@@ -48,19 +48,30 @@
                 return $arr;
             };
 
-            this.get = function ($name, $element, $val) {
+            this.run_regex = function ($name) {
                 var $regex = /\w+(?!\[)[\w&.\-]+\w+/g;
                 var $m = null;
                 var $this = this;
-                $this.element = $element;
-                $this.val_req = $val;
                 while ( ( $m = $regex.exec($name) ) !== null ) {
                     if ( $m.index === $regex.lastIndex ) {
                         $regex.lastIndex++;
                     }
                     $this.set_key($m);
                 }
+                return true;
+            };
+
+            this.get = function ($name, $element, $val) {
+                var $this = this;
+                $this.element = $element;
+                $this.val_req = $val;
+                this.run_regex($name);
                 return this.render_array();
+            };
+
+            this.get_key = function ($name) {
+                this.run_regex($name);
+                return ( this.key[0] !== undefined ) ? this.key[0] : null;
             };
 
             this.array_merge = function () {
@@ -156,5 +167,17 @@
             return $ary;
 
         };
+
+        $.fn.inputArrayKey = function ($name) {
+            if ( $name === undefined ) {
+                $name = 'name';
+            }
+            var $name = $(this).attr($name);
+            if ( $name === undefined ) {
+                return false;
+            }
+            var $arr = new vsAttrToArray();
+            return $arr.get_key($name);
+        }
 
     }(jQuery) );
