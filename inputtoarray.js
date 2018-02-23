@@ -1,10 +1,14 @@
-( function ($) {
+;( function ($) {
+        'use strict';
 
         function vsAttrToArray() {
-            this.key = [];
-            this.array = null;
-            this.element = null;
-            this.val_req = false;
+
+            this.set_defaults = function () {
+                this.key = [];
+                this.array = null;
+                this.element = null;
+                this.val_req = false;
+            };
 
             this.set_key = function ($key) {
                 var $this = this;
@@ -28,6 +32,7 @@
                     $arr = this.array;
                 }
 
+
                 var $this = this;
 
                 if ( $arr === null ) {
@@ -36,13 +41,17 @@
                 } else if ( typeof $arr === 'object' || typeof $arr === 'array' ) {
                     $.each($arr, function ($key, $val) {
                         if ( $val === null ) {
-                            $arr[$key] = {};
+                            if ( $arr[$key] === null ) {
+                                $arr[$key] = {};
+                            }
+
                             $arr[$key][$value] = ( ( $this.key.length - 1 ) === $CK && $this.val_req === true ) ? $this.element.val() : null;
-                            return $arr;
                         } else if ( typeof $val === 'object' || typeof $val === 'array' ) {
-                            $arr[$key] = $this.hook_array($CK, $value, $val);
+                            $arr[$key] = $this.hook_array($CK, $value, $arr[$key]);
+                        } else {
                         }
                     })
+                } else {
                 }
 
                 return $arr;
@@ -52,12 +61,14 @@
                 var $regex = /\w+(?!\[)[\w&.\-]+\w+/g;
                 var $m = null;
                 var $this = this;
+
                 while ( ( $m = $regex.exec($name) ) !== null ) {
                     if ( $m.index === $regex.lastIndex ) {
                         $regex.lastIndex++;
                     }
                     $this.set_key($m);
                 }
+
                 return true;
             };
 
@@ -66,7 +77,9 @@
                 $this.element = $element;
                 $this.val_req = $val;
                 this.run_regex($name);
-                return this.render_array();
+                var $data = this.render_array();
+                this.set_defaults();
+                return $data;
             };
 
             this.get_key = function ($name) {
@@ -135,7 +148,9 @@
                     for ( idx in arr2 ) {
                         if ( idx in arr1 ) {
                             if ( typeof arr1[idx] === 'object' && typeof arr2 === 'object' ) {
-                                arr1[idx] = this.array_merge(arr1[idx], arr2[idx])
+                                arr1[idx] = this.array_merge_recursive(arr1[idx], arr2[idx]);
+                            } else if ( typeof arr1[idx] === 'array' && typeof arr2 === 'array' ) {
+                                arr1[idx] = this.array_merge(arr1[idx], arr2[idx]);
                             } else {
                                 arr1[idx] = arr2[idx]
                             }
@@ -146,24 +161,25 @@
                 }
                 return arr1
             }
+
+            this.set_defaults();
         }
 
         $.fn.inputToArray = function ($options) {
             var $ary = {};
-            this.each(function () {
-                var $settings = $.extend({
-                    key: 'name',
-                    value: true,
-                }, $options);
+            var $settings = $.extend({
+                key: 'name',
+                value: true,
+            }, $options);
 
+            var $arr = new vsAttrToArray();
+            this.each(function () {
                 var $name = $(this).attr($settings.key);
-                if ( $name === undefined ) {
-                    return false;
+                if ( $name !== undefined ) {
+                    var $r = $arr.get($name, $(this), $settings.value);
+                    $ary = $arr.array_merge_recursive($r, $ary);
                 }
-                var $arr = new vsAttrToArray();
-                var $r = $arr.get($name, $(this), $settings.value);
-                $ary = $arr.array_merge_recursive($ary, $r);
-            })
+            });
             return $ary;
 
         };
