@@ -6,7 +6,8 @@
 <script src="intputtoarray.js"></script>
 <script>
     $(document).ready(function () {
-        console.log($('input#ToArray').inputToArray());
+        console.log($('input#ToArray').inputToArray({key:'name',value:true})); // Return as array
+        console.log($('input#ToArray').inputArrayKey('name')); // returns base array key
     })
 </script>
 
