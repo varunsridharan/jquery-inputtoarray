@@ -15,3 +15,4 @@
     <input type="text" id="ToArray" name="groups[level1][level2][level3]" value="This is the value"/>>
 </div>
 ```
+[![Screenshot](https://raw.githubusercontent.com/varunsridharan/jquery-inputtoarray/master/view.gif)](https://raw.githubusercontent.com/varunsridharan/jquery-inputtoarray/master/view.gif)
