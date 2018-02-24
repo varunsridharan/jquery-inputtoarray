@@ -8,6 +8,7 @@
             this.array = null;
             this.element = null;
             this.val_req = false;
+            this.elem_key = null;
         };
 
         this.set_key = function ($key) {
@@ -27,15 +28,48 @@
             return $this.array;
         };
 
+        this.element_array = function () {
+            var $elem = this.element.attr(this.elem_key);
+            if ( $elem !== undefined || $elem !== '' || $elem !== false ) {
+                var $regex = /\[]/g;
+                var $m = null;
+                if ( ( $m = $regex.exec($elem) ) !== null ) {
+                    if ( $m.length === 1 ) {
+                        if ( $m[0] === '[]' ) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+
+        };
+
         this.get_value = function () {
             var $this = this;
+            var $value = null;
+
             if ( $this.element.is('input[type=checkbox]') || $this.element.is('input[type=radio]') ) {
-                return ( $this.element.is(":checked") ) ? $this.element.val() : false;
+                $value = ( $this.element.is(":checked") ) ? $this.element.val() : false;
             } else if ( $this.element.is('textarea') ) {
-                return $this.element.html();
+                $value = $this.element.html();
             } else {
-                return $this.element.val();
+                $value = $this.element.val();
             }
+
+            return ( this.element_array() === true && $value !== false ) ? [$value] : $value;
+        };
+
+        this.set_value = function ($arr, $key, $_value, $c_count) {
+            var $value = this.get_value();
+            if ( $arr[$key] === null ) {
+                $arr[$key] = {};
+            }
+            if ( $value !== false ) {
+
+                $arr[$key][$_value] = ( ( this.key.length - 1 ) === $c_count && this.val_req === true ) ? $value : null;
+            }
+            return $arr;
         };
 
         this.hook_array = function ($CK, $value, $arr) {
@@ -52,18 +86,15 @@
             } else if ( typeof $arr === 'object' || typeof $arr === 'array' ) {
                 $.each($arr, function ($key, $val) {
                     if ( $val === null ) {
-                        if ( $arr[$key] === null ) {
-                            $arr[$key] = {};
-                        }
+                        $arr = $this.set_value($arr, $key, $value, $CK);
 
-                        $arr[$key][$value] = ( ( $this.key.length - 1 ) === $CK && $this.val_req === true ) ? $this.get_value() : null;
                     } else if ( typeof $val === 'object' || typeof $val === 'array' ) {
                         $arr[$key] = $this.hook_array($CK, $value, $arr[$key]);
-                    } else {
                     }
+
                 })
-            } else {
             }
+
 
             return $arr;
         };
@@ -83,10 +114,11 @@
             return true;
         };
 
-        this.get = function ($name, $element, $val) {
+        this.get = function ($name, $element, $val, $elem_key) {
             var $this = this;
             $this.element = $element;
             $this.val_req = $val;
+            $this.elem_key = $elem_key;
             this.run_regex($name);
             var $data = this.render_array();
             this.set_defaults();
@@ -187,7 +219,7 @@
         this.each(function () {
             var $name = $(this).attr($settings.key);
             if ( $name !== undefined ) {
-                var $r = $arr.get($name, $(this), $settings.value);
+                var $r = $arr.get($name, $(this), $settings.value, $settings.key);
                 $ary = $arr.array_merge_recursive($r, $ary);
             }
         });
